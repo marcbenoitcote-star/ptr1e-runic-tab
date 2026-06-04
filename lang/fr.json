@@ -36,7 +36,7 @@
   "PTR_RUNIC.Notify.NoQuantity": "Aucune copie disponible de cette Rune ne reste.",
   "PTR_RUNIC.Notify.NoSlots": "Pas assez de RE Slots libres pour cette Rune.",
   "PTR_RUNIC.Notify.CreatedRune": "Item Rune cree.",
-  "PTR_RUNIC.ItemFields.Title": "Champs de Rune Runic",
+  "PTR_RUNIC.ItemFields.Title": "Runic Enchanting",
   "PTR_RUNIC.ItemFields.IsRune": "Item Rune",
   "PTR_RUNIC.ItemFields.SlotRune": "Slot Rune",
   "PTR_RUNIC.ItemFields.RuneSubname": "Rune Subname",

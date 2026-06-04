@@ -2,6 +2,7 @@ const MODULE_ID = "ptr1e-runic-tab";
 const RUNIC_FLAG = "runic";
 const RUNE_CATEGORY = "Rune";
 const TEMPLATE_PATH = `modules/${MODULE_ID}/templates/runic-tab.hbs`;
+const RUNE_ITEM_MIN_HEIGHT = 700;
 
 const SLOT_DEFINITIONS = [
   { id: "weapon", labelKey: "PTR_RUNIC.Slots.Weapon", fallback: "Weapon", weapon: true },
@@ -457,6 +458,7 @@ async function injectRuneItemFields(app, html) {
   const fieldsHtml = renderRuneItemFields(data);
   if (anchor) anchor.insertAdjacentHTML("afterend", fieldsHtml);
   else details.insertAdjacentHTML("afterbegin", fieldsHtml);
+  if (data.isRune) resizeRuneItemSheet(app);
 
   root.querySelector("[data-ptr-runic-item-fields]")?.addEventListener("change", (event) => {
     const control = event.target?.closest?.("[data-ptr-runic-item-field]");
@@ -515,7 +517,7 @@ function renderRuneItemFields(data) {
 
   return `
     <section class="ptr-runic-rune-fields" data-ptr-runic-item-fields>
-      <h3>${escapeHtml(label("PTR_RUNIC.ItemFields.Title", "Runic Rune Fields"))}</h3>
+      <h3>${escapeHtml(label("PTR_RUNIC.ItemFields.Title", "Runic Enchanting"))}</h3>
       <div class="item-row" style="justify-content: flex-start;">
         <label>${escapeHtml(label("PTR_RUNIC.ItemFields.IsRune", "Rune item"))}</label>
         <input data-ptr-runic-item-field="isRune" type="checkbox" ${data.isRune ? "checked" : ""}>
@@ -561,6 +563,14 @@ async function handleRuneItemFieldChange(app, control) {
   await item.update(updates);
   if (item.actor?.type === "character" && isRuneItem(item)) await ensureActorRuneCategory(item.actor);
   app.render(false);
+}
+
+function resizeRuneItemSheet(app) {
+  if (!(app?.setPosition instanceof Function)) return;
+  const current = app.position ?? {};
+  const viewportHeight = Math.max(520, Number(globalThis.innerHeight ?? 800) - 80);
+  const height = Math.min(viewportHeight, Math.max(Number(current.height ?? 0), RUNE_ITEM_MIN_HEIGHT));
+  if (height > Number(current.height ?? 0)) app.setPosition({ height });
 }
 
 function normalizeRunicConfig(raw) {

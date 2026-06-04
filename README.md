@@ -13,6 +13,7 @@ Module Foundry VTT externe pour Pokemon Tabletop Reunited (`ptu`). Il ajoute un 
   - Special: one-handed 6, two-handed 10, head 2, feet 2, torso 5.
 - Items `Rune` comme items d'inventaire PTR standards (`type: item`, `system.category: "Rune"`).
 - Champs Rune injectes dans la fiche d'item: Slot Rune, Rune Subname, Rune Category, Primary Rune Keyword, Linked Effect UUID.
+- Fiche d'item Rune agrandie automatiquement pour afficher `Runic Enchanting`.
 - Respect de la quantite: une Rune assignee ne consomme pas l'item, mais reduit la quantite disponible.
 - Runes creees normalement par l'utilisateur ou depuis un compendium, puis glissees sur la fiche Trainer.
 - Affichage visuel des RE Slots:
