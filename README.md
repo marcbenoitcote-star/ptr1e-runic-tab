@@ -14,6 +14,7 @@ Module Foundry VTT externe pour Pokemon Tabletop Reunited (`ptu`). Il ajoute un 
 - Items `Rune` comme items d'inventaire PTR standards (`type: item`, `system.category: "Rune"`).
 - Champs Rune injectes dans la fiche d'item: Slot Rune, Rune Subname, Rune Category, Primary Rune Keyword, Linked Effect UUID.
 - Respect de la quantite: une Rune assignee ne consomme pas l'item, mais reduit la quantite disponible.
+- Runes creees normalement par l'utilisateur ou depuis un compendium, puis glissees sur la fiche Trainer.
 - Affichage visuel des RE Slots:
   - Grey: empty
   - Red: Offensive Rune
@@ -65,7 +66,7 @@ Le depot GitHub et les assets de release doivent etre publics pour que Forge pui
 
 1. Ouvrir une fiche Actor de type Trainer.
 2. Aller a l'onglet `Runic`.
-3. Creer une Rune avec `Create Rune` ou convertir un item existant en mettant sa categorie a `Rune`.
+3. Glisser un item Rune depuis un compendium ou l'inventaire vers la fiche Trainer.
 4. Ouvrir la fiche de l'item Rune pour regler `Slot Rune`, `Rune Subname`, keyword, effet et resume.
 5. Choisir l'equipement pour Weapon, Torso, Head ou Feet.
 6. Regler l'orientation Physical / Special.
@@ -75,6 +76,8 @@ Le depot GitHub et les assets de release doivent etre publics pour que Forge pui
 ## A tester
 
 - L'onglet `Runic` apparait bien entre `Moves` et `Contests`.
+- L'onglet `Runic` n'apparait qu'une seule fois.
+- Apres un changement dans Runic, la fiche reste sur l'onglet `Runic`.
 - Les quatre slots d'equipement acceptent les items de l'inventaire du Trainer.
 - Changer l'equipement d'un slot retire les Runes assignees a l'ancien equipement.
 - Les valeurs RE Slots sont exactes pour Physical et Special.
@@ -87,5 +90,5 @@ Le depot GitHub et les assets de release doivent etre publics pour que Forge pui
 - Un keyword non reconnu affiche une couleur neutre.
 - Les noms visuels affichent les subnames entre crochets sans renommer l'item.
 - Supprimer un item Rune ou un item equipement nettoie les references Runic au prochain hook de suppression.
-- Les champs Rune apparaissent dans la fiche d'item PTR.
+- Les champs Rune apparaissent dans la fiche d'item PTR et restent alignes avec les champs natifs.
 - Forge / Foundry installe le module depuis le manifest public.

@@ -83,7 +83,7 @@
 
 .ptr-runic-controls select,
 .ptr-runic-add-rune select,
-.ptr-runic-rune-fields input,
+.ptr-runic-rune-fields input:not([type="checkbox"]),
 .ptr-runic-rune-fields select {
   min-width: 0;
   width: 100%;
@@ -197,20 +197,19 @@
 }
 
 .ptr-runic-rune-fields {
-  margin: 8px;
-  padding: 8px;
-  border: 1px solid rgba(20, 28, 40, 0.2);
-  border-radius: 6px;
-  background: rgba(244, 247, 250, 0.9);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .ptr-runic-rune-fields h3 {
-  margin: 0 0 6px;
+  margin: 8px 0 4px;
   font-size: 14px;
 }
 
 .ptr-runic-rune-fields .item-row {
-  gap: 8px;
+  gap: 0;
 }
 
 @media (max-width: 850px) {

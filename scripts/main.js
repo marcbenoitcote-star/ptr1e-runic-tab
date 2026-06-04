@@ -115,29 +115,48 @@ async function injectRunicTab(app, html) {
   if (!actor || actor.type !== "character") return;
 
   const root = getSheetRoot(app, html);
-  if (!root || root.querySelector("[data-ptr-runic-tab]")) return;
+  if (!root) return;
+  dedupeRunicElements(root);
+  if (root.dataset.ptrRunicInjecting === "true") return;
+  if (root.querySelector("[data-ptr-runic-tab]") || root.querySelector("[data-ptr-runic-nav]")) {
+    bindRunicTabListeners(app, root);
+    bindFoundryTabs(app, root);
+    activateRunicAfterRender(app, root);
+    return;
+  }
+  root.dataset.ptrRunicInjecting = "true";
 
   const nav = root.querySelector("nav.tabs[data-group='primary'], nav.tabs");
   const sheetBody = root.querySelector(".sheet-body");
-  if (!nav || !sheetBody) return;
+  if (!nav || !sheetBody) {
+    root.dataset.ptrRunicInjecting = "false";
+    return;
+  }
 
-  const movesNav = nav.querySelector('[data-tab="moves"]');
-  const contestsNav = nav.querySelector('[data-tab="contests"]');
-  const navHtml = `<a class="item tooltip ball-themes" title="${escapeHtml(label("PTR_RUNIC.Tab", "Runic"))}" data-tab="runic" data-ptr-runic-nav><i class="fas fa-gem"></i></a>`;
-  if (movesNav) movesNav.insertAdjacentHTML("afterend", navHtml);
-  else if (contestsNav) contestsNav.insertAdjacentHTML("beforebegin", navHtml);
-  else nav.insertAdjacentHTML("beforeend", navHtml);
+  try {
+    const movesNav = nav.querySelector('[data-tab="moves"]');
+    const contestsNav = nav.querySelector('[data-tab="contests"]');
+    const navHtml = `<a class="item tooltip ball-themes" title="${escapeHtml(label("PTR_RUNIC.Tab", "Runic"))}" data-tab="runic" data-ptr-runic-nav><i class="fas fa-gem"></i></a>`;
+    if (movesNav) movesNav.insertAdjacentHTML("afterend", navHtml);
+    else if (contestsNav) contestsNav.insertAdjacentHTML("beforebegin", navHtml);
+    else nav.insertAdjacentHTML("beforeend", navHtml);
 
-  const data = await buildRunicTabData(actor);
-  const tabHtml = await renderModuleTemplate(TEMPLATE_PATH, data);
-  const movesTab = sheetBody.querySelector('[data-tab="moves"]');
-  const contestsTab = sheetBody.querySelector('[data-tab="contests"]');
-  if (movesTab) movesTab.insertAdjacentHTML("afterend", tabHtml);
-  else if (contestsTab) contestsTab.insertAdjacentHTML("beforebegin", tabHtml);
-  else sheetBody.insertAdjacentHTML("beforeend", tabHtml);
+    const data = await buildRunicTabData(actor);
+    const tabHtml = await renderModuleTemplate(TEMPLATE_PATH, data);
+    const movesTab = sheetBody.querySelector('[data-tab="moves"]');
+    const contestsTab = sheetBody.querySelector('[data-tab="contests"]');
+    if (movesTab) movesTab.insertAdjacentHTML("afterend", tabHtml);
+    else if (contestsTab) contestsTab.insertAdjacentHTML("beforebegin", tabHtml);
+    else sheetBody.insertAdjacentHTML("beforeend", tabHtml);
 
-  bindRunicTabListeners(app, root);
-  bindFoundryTabs(app, root);
+    dedupeRunicElements(root);
+    bindRunicTabListeners(app, root);
+    bindFoundryTabs(app, root);
+    activateRunicAfterRender(app, root);
+    root.dataset.ptrRunicInjected = "true";
+  } finally {
+    root.dataset.ptrRunicInjecting = "false";
+  }
 }
 
 async function buildRunicTabData(actor) {
@@ -299,6 +318,9 @@ function getSlotWarning(equipment, slotState, usedSlots, capacity) {
 }
 
 function bindRunicTabListeners(app, root) {
+  if (root.dataset.ptrRunicListeners === "true") return;
+  root.dataset.ptrRunicListeners = "true";
+
   root.querySelector("[data-ptr-runic-tab]")?.addEventListener("change", (event) => {
     const control = event.target?.closest?.("[data-ptr-runic-action]");
     if (!control) return;
@@ -340,7 +362,7 @@ async function handleRunicChange(app, control) {
   }
 
   await saveRunicConfig(actor, config);
-  app.render(false);
+  rerenderRunicTab(app);
 }
 
 async function handleRunicClick(app, root, control) {
@@ -348,15 +370,6 @@ async function handleRunicClick(app, root, control) {
   if (!actor?.isOwner) return;
 
   const action = control.dataset.ptrRunicAction;
-  if (action === "create-rune") {
-    await ensureActorRuneCategory(actor);
-    const created = await actor.createEmbeddedDocuments("Item", [createRuneItemData()]);
-    created[0]?.sheet?.render(true);
-    ui.notifications.info(label("PTR_RUNIC.Notify.CreatedRune", "Rune item created."));
-    app.render(false);
-    return;
-  }
-
   if (action === "edit-item") {
     const item = actor.items.get(control.dataset.itemId);
     item?.sheet?.render(true);
@@ -369,14 +382,14 @@ async function handleRunicClick(app, root, control) {
   if (action === "add-rune") {
     const select = root.querySelector(`[data-ptr-runic-rune-select][data-slot="${slotId}"]`);
     await assignRune(actor, slotId, select?.value ?? "");
-    app.render(false);
+    rerenderRunicTab(app);
     return;
   }
 
   if (action === "remove-rune") {
     const assignmentId = control.dataset.assignmentId;
     await removeRuneAssignment(actor, slotId, assignmentId);
-    app.render(false);
+    rerenderRunicTab(app);
   }
 }
 
@@ -799,6 +812,9 @@ async function cleanupRuneAssignmentsForItem(actor, itemId) {
 }
 
 function bindFoundryTabs(app, root) {
+  if (root.dataset.ptrRunicTabsBound === "true") return;
+  root.dataset.ptrRunicTabsBound = "true";
+
   for (const tab of app?._tabs ?? []) {
     if (tab?.bind instanceof Function) tab.bind(root);
   }
@@ -808,12 +824,46 @@ function bindFoundryTabs(app, root) {
 
   runicNav.addEventListener("click", (event) => {
     event.preventDefault();
+    rememberActiveTab(app, "runic");
     activateRunicTab(root);
   });
 
   root.querySelectorAll("nav.tabs [data-tab]:not([data-tab='runic'])").forEach((tab) => {
-    tab.addEventListener("click", () => deactivateRunicTab(root));
+    tab.addEventListener("click", () => {
+      rememberActiveTab(app, tab.dataset.tab);
+      deactivateRunicTab(root);
+    });
   });
+}
+
+function dedupeRunicElements(root) {
+  for (const selector of ["[data-ptr-runic-nav]", "[data-ptr-runic-tab]"]) {
+    const elements = Array.from(root.querySelectorAll(selector));
+    for (const element of elements.slice(1)) element.remove();
+  }
+}
+
+function rerenderRunicTab(app) {
+  rememberActiveTab(app, "runic");
+  for (const tab of app?._tabs ?? []) {
+    if ("active" in tab) tab.active = "runic";
+  }
+  app.render(false);
+}
+
+function rememberActiveTab(app, tab) {
+  if (!app) return;
+  app[MODULE_ID] ??= {};
+  app[MODULE_ID].activeTab = tab;
+  app[MODULE_ID].activateRunicAfterRender = tab === "runic";
+}
+
+function activateRunicAfterRender(app, root) {
+  const state = app?.[MODULE_ID];
+  if (state?.activateRunicAfterRender || state?.activeTab === "runic") {
+    activateRunicTab(root);
+    state.activateRunicAfterRender = false;
+  }
 }
 
 function activateRunicTab(root) {
@@ -854,7 +904,6 @@ function getLabels() {
     remove: label("PTR_RUNIC.Remove", "Remove"),
     edit: label("PTR_RUNIC.Edit", "Edit"),
     runeInventory: label("PTR_RUNIC.RuneInventory", "Rune Inventory"),
-    createRune: label("PTR_RUNIC.CreateRune", "Create Rune"),
     noRunes: label("PTR_RUNIC.NoRunes", "No Rune item found on this Trainer.")
   };
 }
