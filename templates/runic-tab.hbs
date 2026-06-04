@@ -1,0 +1,124 @@
+<div class="tab details ptr-runic-tab" data-group="primary" data-tab="runic" data-ptr-runic-tab>
+  <div class="ptr-runic-layout">
+    <section class="ptr-runic-equipment">
+      {{#each slots as |slot|}}
+        <article class="ptr-runic-card" data-slot="{{slot.id}}">
+          <header class="ptr-runic-card-header">
+            <div>
+              <h3>{{slot.label}}</h3>
+              <p>{{slot.displayName}}</p>
+            </div>
+            <strong>{{slot.usedSlots}} / {{slot.capacity}} RE</strong>
+          </header>
+
+          <div class="ptr-runic-controls">
+            <label>
+              <span>{{../labels.equipment}}</span>
+              <select data-ptr-runic-action="equipment" data-slot="{{slot.id}}">
+                <option value="">{{../labels.none}}</option>
+                {{#each slot.equipmentOptions as |option|}}
+                  <option value="{{option.id}}" {{#if option.selected}}selected{{/if}}>{{option.label}}</option>
+                {{/each}}
+              </select>
+            </label>
+
+            {{#if slot.isWeapon}}
+              <label>
+                <span>{{../labels.weaponType}}</span>
+                <select data-ptr-runic-action="weapon-type" data-slot="{{slot.id}}">
+                  {{#each slot.weaponTypeOptions as |option|}}
+                    <option value="{{option.id}}" {{#if option.selected}}selected{{/if}}>{{option.label}}</option>
+                  {{/each}}
+                </select>
+              </label>
+            {{/if}}
+
+            <label>
+              <span>{{../labels.orientation}}</span>
+              <select data-ptr-runic-action="orientation" data-slot="{{slot.id}}">
+                {{#each slot.orientationOptions as |option|}}
+                  <option value="{{option.id}}" {{#if option.selected}}selected{{/if}}>{{option.label}}</option>
+                {{/each}}
+              </select>
+            </label>
+          </div>
+
+          <div class="ptr-runic-slot-strip" aria-label="{{slot.slotLabel}}">
+            {{#each slot.slotBoxes as |box|}}
+              <span class="ptr-runic-re-slot {{box.className}}" title="{{box.title}}"></span>
+            {{/each}}
+          </div>
+
+          {{#if slot.warning}}
+            <p class="ptr-runic-warning">{{slot.warning}}</p>
+          {{/if}}
+
+          <div class="ptr-runic-assigned">
+            <h4>{{../labels.assignedRunes}}</h4>
+            {{#if slot.assignedRunes.length}}
+              <ol>
+                {{#each slot.assignedRunes as |rune|}}
+                  <li>
+                    <span class="ptr-runic-rune-dot {{rune.colorClass}}"></span>
+                    <span>{{rune.label}}</span>
+                    <small>{{rune.slotRune}} RE - {{rune.keywordLabel}}</small>
+                    <button type="button" data-ptr-runic-action="remove-rune" data-slot="{{slot.id}}" data-assignment-id="{{rune.assignmentId}}" title="{{../../labels.remove}}">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </li>
+                {{/each}}
+              </ol>
+            {{else}}
+              <p class="ptr-runic-muted">{{../labels.noAssignedRunes}}</p>
+            {{/if}}
+          </div>
+
+          <div class="ptr-runic-add-rune">
+            <select data-ptr-runic-rune-select data-slot="{{slot.id}}" {{#unless slot.canAdd}}disabled{{/unless}}>
+              <option value="">{{../labels.selectRune}}</option>
+              {{#each slot.runeOptions as |rune|}}
+                <option value="{{rune.id}}" {{#if rune.disabled}}disabled{{/if}}>{{rune.optionLabel}}</option>
+              {{/each}}
+            </select>
+            <button type="button" data-ptr-runic-action="add-rune" data-slot="{{slot.id}}" {{#unless slot.canAdd}}disabled{{/unless}}>
+              <i class="fas fa-plus"></i>
+              <span>{{../labels.assign}}</span>
+            </button>
+          </div>
+        </article>
+      {{/each}}
+    </section>
+
+    <aside class="ptr-runic-runes">
+      <header class="ptr-runic-runes-header">
+        <h3>{{labels.runeInventory}}</h3>
+        <button type="button" data-ptr-runic-action="create-rune">
+          <i class="fas fa-plus"></i>
+          <span>{{labels.createRune}}</span>
+        </button>
+      </header>
+
+      {{#if runeItems.length}}
+        <ol class="ptr-runic-rune-list">
+          {{#each runeItems as |rune|}}
+            <li>
+              <span class="ptr-runic-rune-dot {{rune.colorClass}}"></span>
+              <div>
+                <strong>{{rune.name}}</strong>
+                <small>{{rune.quantityLabel}} - {{rune.slotRune}} RE - {{rune.keywordLabel}}</small>
+                {{#if rune.snippet}}
+                  <p>{{rune.snippet}}</p>
+                {{/if}}
+              </div>
+              <button type="button" data-ptr-runic-action="edit-item" data-item-id="{{rune.id}}" title="{{../labels.edit}}">
+                <i class="fas fa-pen"></i>
+              </button>
+            </li>
+          {{/each}}
+        </ol>
+      {{else}}
+        <p class="ptr-runic-empty">{{labels.noRunes}}</p>
+      {{/if}}
+    </aside>
+  </div>
+</div>

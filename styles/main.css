@@ -1,0 +1,224 @@
+.ptu.sheet.actor .ptr-runic-tab {
+  height: 100%;
+  overflow: auto;
+  padding: 8px;
+}
+
+.ptr-runic-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 270px;
+  gap: 10px;
+  min-height: 100%;
+}
+
+.ptr-runic-equipment {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-content: start;
+}
+
+.ptr-runic-card,
+.ptr-runic-runes {
+  border: 1px solid rgba(20, 28, 40, 0.25);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 1px 2px rgba(20, 28, 40, 0.12);
+}
+
+.ptr-runic-card {
+  padding: 8px;
+}
+
+.ptr-runic-card-header,
+.ptr-runic-runes-header,
+.ptr-runic-assigned li,
+.ptr-runic-rune-list li,
+.ptr-runic-add-rune {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ptr-runic-card-header,
+.ptr-runic-runes-header {
+  justify-content: space-between;
+}
+
+.ptr-runic-card-header h3,
+.ptr-runic-runes-header h3,
+.ptr-runic-assigned h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.ptr-runic-card-header p,
+.ptr-runic-muted,
+.ptr-runic-empty,
+.ptr-runic-warning {
+  margin: 3px 0 0;
+  font-size: 12px;
+}
+
+.ptr-runic-card-header strong {
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.ptr-runic-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.ptr-runic-controls label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ptr-runic-controls select,
+.ptr-runic-add-rune select,
+.ptr-runic-rune-fields input,
+.ptr-runic-rune-fields select {
+  min-width: 0;
+  width: 100%;
+}
+
+.ptr-runic-slot-strip {
+  display: grid;
+  grid-template-columns: repeat(10, 18px);
+  gap: 4px;
+  margin: 10px 0;
+}
+
+.ptr-runic-re-slot {
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(20, 28, 40, 0.32);
+  border-radius: 4px;
+  background: #a5acb8;
+}
+
+.ptr-runic-re-slot.offensive,
+.ptr-runic-rune-dot.offensive {
+  background: #c84242;
+}
+
+.ptr-runic-re-slot.defensive,
+.ptr-runic-rune-dot.defensive {
+  background: #3178bd;
+}
+
+.ptr-runic-re-slot.mixed,
+.ptr-runic-rune-dot.mixed {
+  background: #d4b231;
+}
+
+.ptr-runic-re-slot.unknown,
+.ptr-runic-rune-dot.unknown {
+  background: #6d6078;
+}
+
+.ptr-runic-re-slot.empty {
+  background: #a5acb8;
+}
+
+.ptr-runic-warning {
+  color: #8f4e00;
+  font-weight: 700;
+}
+
+.ptr-runic-muted,
+.ptr-runic-empty {
+  color: #5f6875;
+}
+
+.ptr-runic-assigned ol,
+.ptr-runic-rune-list {
+  margin: 5px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ptr-runic-assigned li,
+.ptr-runic-rune-list li {
+  min-height: 28px;
+  padding: 4px 0;
+  border-top: 1px solid rgba(20, 28, 40, 0.12);
+}
+
+.ptr-runic-assigned li span:nth-child(2),
+.ptr-runic-rune-list li div {
+  min-width: 0;
+  flex: 1;
+}
+
+.ptr-runic-assigned small,
+.ptr-runic-rune-list small {
+  color: #536070;
+}
+
+.ptr-runic-rune-list p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #3f4855;
+}
+
+.ptr-runic-rune-dot {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(20, 28, 40, 0.3);
+  border-radius: 50%;
+}
+
+.ptr-runic-add-rune {
+  margin-top: 8px;
+}
+
+.ptr-runic-add-rune select {
+  flex: 1;
+}
+
+.ptr-runic-runes {
+  align-self: start;
+  padding: 8px;
+}
+
+.ptr-runic-card button,
+.ptr-runic-runes button {
+  flex: 0 0 auto;
+  min-width: 28px;
+}
+
+.ptr-runic-rune-fields {
+  margin: 8px;
+  padding: 8px;
+  border: 1px solid rgba(20, 28, 40, 0.2);
+  border-radius: 6px;
+  background: rgba(244, 247, 250, 0.9);
+}
+
+.ptr-runic-rune-fields h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.ptr-runic-rune-fields .item-row {
+  gap: 8px;
+}
+
+@media (max-width: 850px) {
+  .ptr-runic-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ptr-runic-equipment {
+    grid-template-columns: 1fr;
+  }
+}
