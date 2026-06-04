@@ -1,37 +1,46 @@
 # PTR1e Runic Tab
 
-Module Foundry VTT externe pour Pokemon Tabletop Reunited (`ptu`). Il ajoute un onglet `Runic` a la fiche Trainer afin de gerer des equipements enchantes par des Runes.
+External Foundry VTT module for Pokemon Tabletop Reunited (`ptu`). It adds a `Runic` tab to Trainer sheets for managing rune-enchanted equipment.
 
-## Fonctionnalites
+## Features
 
-- Onglet `Runic` ajoute apres `Moves` et avant `Contests` sur la fiche Trainer compacte PTR1e.
-- Slots d'equipement: Weapon, Torso / Body, Head, Feet.
-- Orientation Physical / Special pour chaque slot.
-- Weapon Type One-Handed / Two-Handed pour l'arme.
-- Calcul automatique des RE Slots:
-  - Physical: one-handed 4, two-handed 8, head 1, feet 1, torso 3.
-  - Special: one-handed 6, two-handed 10, head 2, feet 2, torso 5.
-- Items `Rune` comme items d'inventaire PTR standards (`type: item`, `system.category: "Rune"`).
-- Champs Rune injectes dans la fiche d'item: Slot Rune, Rune Subname, Rune Category, Primary Rune Keyword, Linked Effect UUID.
-- Fiche d'item Rune agrandie automatiquement pour afficher `Runic Enchanting`.
-- Respect de la quantite: une Rune assignee ne consomme pas l'item, mais reduit la quantite disponible.
-- Runes creees normalement par l'utilisateur ou depuis un compendium, puis glissees sur la fiche Trainer.
-- Affichage visuel des RE Slots:
+- Adds a `Runic` tab after `Moves` and before `Contests` on PTR1e compact Trainer sheets.
+- Equipment slots:
+  - Weapon
+  - Torso / Body
+  - Head
+  - Feet
+- Physical / Special orientation for each equipment slot.
+- One-Handed / Two-Handed weapon type for the Weapon slot.
+- Automatic RE Slot calculation:
+  - Physical: one-handed weapon 4, two-handed weapon 8, head 1, feet 1, torso 3.
+  - Special: one-handed weapon 6, two-handed weapon 10, head 2, feet 2, torso 5.
+- Rune items are standard PTR inventory items (`type: item`, `system.category: "Rune"`).
+- Rune item fields injected into the item sheet:
+  - Slot Rune
+  - Rune Subname
+  - Rune Category
+  - Primary Rune Keyword
+  - Linked Effect UUID
+- Rune item sheets automatically open taller so `Runic Enchanting` is visible.
+- Rune quantity is respected. Assigning a Rune does not permanently reduce item quantity, but it reduces the available assigned count.
+- Runes are created by the user or imported from a compendium, then dragged onto a Trainer sheet.
+- Visual RE Slot display:
   - Grey: empty
   - Red: Offensive Rune
   - Blue: Defensive Rune
   - Yellow: Mixed Rune
-- Nom visuel de l'equipement avec les subnames de Rune entre crochets, sans renommer l'item d'inventaire.
+- Equipment display names show Rune subnames in brackets without renaming the actual inventory item.
 
-## Stockage
+## Storage
 
-La configuration Runic est stockee sur l'Actor Trainer:
+Runic configuration is stored on the Trainer Actor:
 
 ```text
 flags.ptr1e-runic-tab.runic
 ```
 
-Les metadonnees propres aux Runes sont stockees sur l'item:
+Rune metadata is stored on the item:
 
 ```text
 flags.ptr1e-runic-tab.slotRune
@@ -41,55 +50,55 @@ flags.ptr1e-runic-tab.primaryKeyword
 flags.ptr1e-runic-tab.linkedEffect
 ```
 
-Le module utilise des flags plutot que `system.runic` afin d'eviter les conflits avec le schema PTR1e de Foundry V13.
+The module uses flags instead of `system.runic` to avoid conflicts with the PTR1e Foundry V13 schema.
 
-## Installation locale
+## Local Install
 
-Copier ce dossier dans le dossier Foundry:
+Copy this folder into your Foundry modules directory:
 
 ```text
 FoundryVTT/Data/modules/ptr1e-runic-tab
 ```
 
-Activer ensuite `PTR1e Runic Tab` dans le monde PTR1e.
+Then enable `PTR1e Runic Tab` in your PTR1e world.
 
-## Installation Forge / Foundry par manifest
+## Forge / Foundry Manifest Install
 
-Utiliser cette URL avec `Install from Manifest` dans Foundry ou Forge VTT:
+Use this URL with Foundry's or Forge VTT's `Install from Manifest` option:
 
 ```text
 https://github.com/marcbenoitcote-star/ptr1e-runic-tab/releases/latest/download/module.json
 ```
 
-Le depot GitHub et les assets de release doivent etre publics pour que Forge puisse les telecharger sans authentification.
+The GitHub repository and release assets must be public so Forge and Foundry can download them without GitHub authentication.
 
-## Utilisation
+## Usage
 
-1. Ouvrir une fiche Actor de type Trainer.
-2. Aller a l'onglet `Runic`.
-3. Glisser un item Rune depuis un compendium ou l'inventaire vers la fiche Trainer.
-4. Ouvrir la fiche de l'item Rune pour regler `Slot Rune`, `Rune Subname`, keyword, effet et resume.
-5. Choisir l'equipement pour Weapon, Torso, Head ou Feet.
-6. Regler l'orientation Physical / Special.
-7. Pour Weapon, regler One-Handed / Two-Handed.
-8. Assigner les Runes disponibles.
+1. Open a Trainer Actor sheet.
+2. Go to the `Runic` tab.
+3. Drag a Rune item from a compendium or inventory onto the Trainer sheet.
+4. Open the Rune item sheet and configure `Slot Rune`, `Rune Subname`, keyword, effect, and snippet.
+5. Choose equipment for Weapon, Torso, Head, or Feet.
+6. Set Physical / Special orientation.
+7. For Weapon, set One-Handed / Two-Handed.
+8. Assign available Runes.
 
-## A tester
+## Test Checklist
 
-- L'onglet `Runic` apparait bien entre `Moves` et `Contests`.
-- L'onglet `Runic` n'apparait qu'une seule fois.
-- Apres un changement dans Runic, la fiche reste sur l'onglet `Runic`.
-- Les quatre slots d'equipement acceptent les items de l'inventaire du Trainer.
-- Changer l'equipement d'un slot retire les Runes assignees a l'ancien equipement.
-- Les valeurs RE Slots sont exactes pour Physical et Special.
-- One-Handed / Two-Handed modifie correctement la capacite de l'arme.
-- Une Rune `Slot Rune` 1 a 5 occupe le bon nombre de cases.
-- Une Rune ne peut pas etre assignee si les RE Slots libres sont insuffisants.
-- Une Rune avec quantite 1 ne peut pas etre assignee deux fois.
-- Une Rune avec quantite 2 peut etre assignee deux fois.
-- Les couleurs correspondent aux keywords Offensive Rune, Defensive Rune et Mixed Rune.
-- Un keyword non reconnu affiche une couleur neutre.
-- Les noms visuels affichent les subnames entre crochets sans renommer l'item.
-- Supprimer un item Rune ou un item equipement nettoie les references Runic au prochain hook de suppression.
-- Les champs Rune apparaissent dans la fiche d'item PTR et restent alignes avec les champs natifs.
-- Forge / Foundry installe le module depuis le manifest public.
+- The `Runic` tab appears between `Moves` and `Contests`.
+- The `Runic` tab appears only once.
+- After changing something in Runic, the sheet remains on the `Runic` tab.
+- The four equipment slots accept Trainer inventory items.
+- Changing a slot's equipment removes Runes assigned to the previous equipment.
+- RE Slot values are correct for Physical and Special equipment.
+- One-Handed / Two-Handed changes weapon capacity correctly.
+- A `Slot Rune` value from 1 to 5 occupies the correct number of RE Slots.
+- A Rune cannot be assigned if there are not enough free RE Slots.
+- A Rune with quantity 1 cannot be assigned twice.
+- A Rune with quantity 2 can be assigned twice.
+- Colors match Offensive Rune, Defensive Rune, and Mixed Rune keywords.
+- An unrecognized keyword uses the neutral color.
+- Visual equipment names show Rune subnames in brackets without renaming the item.
+- Deleting a Rune item or equipment item cleans up Runic references on the next deletion hook.
+- Rune fields appear on PTR item sheets and stay aligned with the native fields.
+- Forge / Foundry installs the module from the public manifest.
