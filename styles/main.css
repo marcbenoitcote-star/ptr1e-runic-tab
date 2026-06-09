@@ -30,7 +30,31 @@
   padding: 8px;
 }
 
+.ptr-runic-weapon-section {
+  grid-column: 1 / -1;
+}
+
+.ptr-runic-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+
+.ptr-runic-section-header h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.ptr-runic-weapon-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
 .ptr-runic-card-header,
+.ptr-runic-card-actions,
 .ptr-runic-runes-header,
 .ptr-runic-assigned li,
 .ptr-runic-rune-list li,
@@ -43,6 +67,10 @@
 .ptr-runic-card-header,
 .ptr-runic-runes-header {
   justify-content: space-between;
+}
+
+.ptr-runic-card-actions {
+  flex: 0 0 auto;
 }
 
 .ptr-runic-card-header h3,
@@ -191,7 +219,8 @@
 }
 
 .ptr-runic-card button,
-.ptr-runic-runes button {
+.ptr-runic-runes button,
+.ptr-runic-icon-button {
   flex: 0 0 auto;
   min-width: 28px;
 }
@@ -218,6 +247,10 @@
   }
 
   .ptr-runic-equipment {
+    grid-template-columns: 1fr;
+  }
+
+  .ptr-runic-weapon-list {
     grid-template-columns: 1fr;
   }
 }

@@ -5,16 +5,23 @@ External Foundry VTT module for Pokemon Tabletop Reunited (`ptu`). It adds a `Ru
 ## Features
 
 - Adds a `Runic` tab after `Moves` and before `Contests` on PTR1e compact Trainer sheets.
-- Equipment slots:
-  - Weapon
+- Runic sections:
+  - Weapon entries
   - Torso / Body
   - Head
   - Feet
-- Physical / Special orientation for each equipment slot.
-- One-Handed / Two-Handed weapon type for the Weapon slot.
+- The Weapon section supports multiple independent weapon entries.
+- A `+` button in the Weapon section adds a new weapon entry.
+- Each weapon entry has its own selected item, weapon type, orientation, Rune list, and RE Slot display.
+- Weapon entries can be removed without changing other weapon entries.
+- Physical / Special orientation for each equipment slot and weapon entry.
+- One-Handed / Two-Handed weapon type for each weapon entry.
+- Shields are valid Weapon-section items and are treated as One-Handed Weapons for RE Slot calculation.
 - Automatic RE Slot calculation:
   - Physical: one-handed weapon 4, two-handed weapon 8, head 1, feet 1, torso 3.
   - Special: one-handed weapon 6, two-handed weapon 10, head 2, feet 2, torso 5.
+  - Physical shield: 4.
+  - Special shield: 6.
 - Rune items are standard PTR inventory items (`type: item`, `system.category: "Rune"`).
 - Rune item fields injected into the item sheet:
   - Slot Rune
@@ -39,6 +46,39 @@ Runic configuration is stored on the Trainer Actor:
 ```text
 flags.ptr1e-runic-tab.runic
 ```
+
+Current shape:
+
+```js
+{
+  weapons: [
+    {
+      id: "uniqueWeaponEntryId",
+      itemId: null,
+      weaponType: "oneHanded",
+      orientation: "physical",
+      runes: []
+    }
+  ],
+  torso: {
+    itemId: null,
+    orientation: "physical",
+    runes: []
+  },
+  head: {
+    itemId: null,
+    orientation: "physical",
+    runes: []
+  },
+  feet: {
+    itemId: null,
+    orientation: "physical",
+    runes: []
+  }
+}
+```
+
+Older saves using a single `weapon` object are migrated automatically into the first `weapons[]` entry.
 
 Rune metadata is stored on the item:
 
@@ -78,17 +118,29 @@ The GitHub repository and release assets must be public so Forge and Foundry can
 2. Go to the `Runic` tab.
 3. Drag a Rune item from a compendium or inventory onto the Trainer sheet.
 4. Open the Rune item sheet and configure `Slot Rune`, `Rune Subname`, keyword, effect, and snippet.
-5. Choose equipment for Weapon, Torso, Head, or Feet.
-6. Set Physical / Special orientation.
-7. For Weapon, set One-Handed / Two-Handed.
-8. Assign available Runes.
+5. Use the `+` button in the Weapon section to add weapon entries as needed.
+6. Choose equipment for each Weapon entry, Torso, Head, or Feet.
+7. Set Physical / Special orientation.
+8. For each Weapon entry, set One-Handed / Two-Handed. Shields are locked to One-Handed behavior.
+9. Assign available Runes.
 
 ## Test Checklist
 
 - The `Runic` tab appears between `Moves` and `Contests`.
 - The `Runic` tab appears only once.
 - After changing something in Runic, the sheet remains on the `Runic` tab.
-- The four equipment slots accept Trainer inventory items.
+- The Weapon section supports multiple weapon entries.
+- The Weapon section `+` button adds a new independent weapon entry.
+- Each weapon entry can select its own Actor inventory item.
+- Each weapon entry has its own One-Handed / Two-Handed setting.
+- Each weapon entry has its own Physical / Special setting.
+- Each weapon entry has its own Rune list and RE Slot display.
+- Removing one weapon entry does not remove or modify other weapon entries.
+- Shields appear as valid Weapon-section items.
+- Shields use One-Handed RE Slot values.
+- Physical Shields have 4 RE Slots.
+- Special Shields have 6 RE Slots.
+- Torso, Head, and Feet accept Trainer inventory items.
 - Changing a slot's equipment removes Runes assigned to the previous equipment.
 - RE Slot values are correct for Physical and Special equipment.
 - One-Handed / Two-Handed changes weapon capacity correctly.

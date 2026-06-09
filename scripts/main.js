@@ -3,9 +3,9 @@ const RUNIC_FLAG = "runic";
 const RUNE_CATEGORY = "Rune";
 const TEMPLATE_PATH = `modules/${MODULE_ID}/templates/runic-tab.hbs`;
 const RUNE_ITEM_MIN_HEIGHT = 700;
+const WEAPON_SLOT_ID = "weapon";
 
-const SLOT_DEFINITIONS = [
-  { id: "weapon", labelKey: "PTR_RUNIC.Slots.Weapon", fallback: "Weapon", weapon: true },
+const EQUIPMENT_SLOT_DEFINITIONS = [
   { id: "torso", labelKey: "PTR_RUNIC.Slots.Torso", fallback: "Torso / Body" },
   { id: "head", labelKey: "PTR_RUNIC.Slots.Head", fallback: "Head" },
   { id: "feet", labelKey: "PTR_RUNIC.Slots.Feet", fallback: "Feet" }
@@ -55,7 +55,7 @@ const KEYWORD_DATA = {
 };
 
 const SLOT_MATCHERS = {
-  weapon: /\b(weapon|sword|blade|axe|dagger|knife|spear|staff|wand|rod|bow|crossbow|gun|pistol|rifle|hammer|mace|club|whip)\b/i,
+  weapon: /\b(weapon|shield|buckler|aegis|sword|blade|axe|dagger|knife|spear|staff|wand|rod|bow|crossbow|gun|pistol|rifle|hammer|mace|club|whip)\b/i,
   torso: /\b(torso|body|armor|armour|fashion|chest|coat|robe|jacket|vest|mail|plate|clothes|clothing|outfit|suit)\b/i,
   head: /\b(head|helmet|helm|hat|mask|hood|crown|circlet|cap|visor|goggles)\b/i,
   feet: /\b(feet|foot|boot|boots|shoe|shoes|sandals|greaves)\b/i
@@ -172,18 +172,46 @@ async function buildRunicTabData(actor) {
 
   return {
     labels: getLabels(),
-    slots: SLOT_DEFINITIONS.map((definition) => buildSlotViewData(actor, definition, config[definition.id], equipmentItems, runeViewData, assignedCounts)),
+    weaponSection: {
+      label: label("PTR_RUNIC.Slots.Weapon", "Weapon"),
+      addLabel: label("PTR_RUNIC.AddWeapon", "Add Weapon"),
+      noWeapons: label("PTR_RUNIC.NoWeapons", "No weapon entry configured."),
+      entries: config.weapons.map((entry, index) => buildWeaponEntryViewData(actor, entry, index, equipmentItems, runeViewData, assignedCounts))
+    },
+    slots: EQUIPMENT_SLOT_DEFINITIONS.map((definition) => buildSlotViewData(actor, definition, config[definition.id], equipmentItems, runeViewData, assignedCounts)),
     runeItems: runeViewData
+  };
+}
+
+function buildWeaponEntryViewData(actor, entry, index, equipmentItems, runeViewData, assignedCounts) {
+  const equipment = entry.itemId ? actor.items.get(entry.itemId) : null;
+  const isShield = isShieldItem(equipment);
+  const slotState = isShield ? { ...entry, weaponType: "oneHanded" } : entry;
+  const data = buildSlotViewData(actor, { id: WEAPON_SLOT_ID, labelKey: "PTR_RUNIC.Slots.Weapon", fallback: "Weapon", weapon: true }, slotState, equipmentItems, runeViewData, assignedCounts);
+  return {
+    ...data,
+    id: getWeaponSlotKey(entry.id),
+    entryId: entry.id,
+    label: `${label("PTR_RUNIC.Slots.Weapon", "Weapon")} ${index + 1}`,
+    removeLabel: label("PTR_RUNIC.RemoveWeapon", "Remove Weapon"),
+    isShield,
+    weaponTypeOptions: WEAPON_TYPE_OPTIONS.map((option) => ({
+      ...option,
+      label: label(option.labelKey, option.fallback),
+      selected: slotState.weaponType === option.id,
+      disabled: isShield && option.id !== "oneHanded"
+    }))
   };
 }
 
 function buildSlotViewData(actor, definition, slotState, equipmentItems, runeViewData, assignedCounts) {
   const equipment = slotState.itemId ? actor.items.get(slotState.itemId) : null;
-  const capacity = getCapacity(definition.id, slotState);
+  const baseSlotId = getBaseSlotId(definition.id);
+  const capacity = getCapacity(baseSlotId, slotState, equipment);
   const assignedRunes = slotState.runes.map((assignment) => buildAssignedRuneViewData(actor, assignment));
   const usedSlots = assignedRunes.reduce((total, rune) => total + rune.slotRune, 0);
   const freeSlots = Math.max(0, capacity - usedSlots);
-  const equipmentOptions = buildEquipmentOptions(equipmentItems, definition.id, slotState.itemId);
+  const equipmentOptions = buildEquipmentOptions(equipmentItems, baseSlotId, slotState.itemId);
   const subnames = assignedRunes.filter((rune) => !rune.missing && rune.subname).map((rune) => `[${rune.subname}]`);
   const displayName = equipment ? [equipment.name, ...subnames].join(" ") : label("PTR_RUNIC.None", "None");
   const warning = getSlotWarning(equipment, slotState, usedSlots, capacity);
@@ -345,8 +373,9 @@ async function handleRunicChange(app, control) {
   if (!slotId) return;
 
   const config = normalizeRunicConfig(actor.getFlag(MODULE_ID, RUNIC_FLAG));
-  const slot = config[slotId];
-  if (!slot) return;
+  const slotRef = getRunicSlotRef(config, slotId);
+  if (!slotRef) return;
+  const { slot, baseSlotId } = slotRef;
 
   if (action === "equipment") {
     const nextItemId = control.value || null;
@@ -354,12 +383,14 @@ async function handleRunicChange(app, control) {
       slot.itemId = nextItemId;
       slot.runes = [];
     }
+    if (baseSlotId === WEAPON_SLOT_ID && isShieldItem(actor.items.get(nextItemId))) slot.weaponType = "oneHanded";
   } else if (action === "orientation") {
     slot.orientation = control.value === "special" ? "special" : "physical";
-    trimRunesToCapacity(slotId, slot);
+    if (baseSlotId === WEAPON_SLOT_ID && isShieldItem(actor.items.get(slot.itemId))) slot.weaponType = "oneHanded";
+    trimRunesToCapacity(baseSlotId, slot, actor.items.get(slot.itemId));
   } else if (action === "weapon-type") {
-    slot.weaponType = control.value === "twoHanded" ? "twoHanded" : "oneHanded";
-    trimRunesToCapacity(slotId, slot);
+    slot.weaponType = control.value === "twoHanded" && !isShieldItem(actor.items.get(slot.itemId)) ? "twoHanded" : "oneHanded";
+    trimRunesToCapacity(baseSlotId, slot, actor.items.get(slot.itemId));
   }
 
   await saveRunicConfig(actor, config);
@@ -371,6 +402,14 @@ async function handleRunicClick(app, root, control) {
   if (!actor?.isOwner) return;
 
   const action = control.dataset.ptrRunicAction;
+  if (action === "add-weapon") {
+    const config = normalizeRunicConfig(actor.getFlag(MODULE_ID, RUNIC_FLAG));
+    config.weapons.push(createWeaponEntry());
+    await saveRunicConfig(actor, config);
+    rerenderRunicTab(app);
+    return;
+  }
+
   if (action === "edit-item") {
     const item = actor.items.get(control.dataset.itemId);
     item?.sheet?.render(true);
@@ -379,6 +418,15 @@ async function handleRunicClick(app, root, control) {
 
   const slotId = control.dataset.slot;
   if (!slotId) return;
+
+  if (action === "remove-weapon") {
+    const config = normalizeRunicConfig(actor.getFlag(MODULE_ID, RUNIC_FLAG));
+    const entryId = getWeaponEntryIdFromSlotKey(slotId);
+    config.weapons = config.weapons.filter((entry) => entry.id !== entryId);
+    await saveRunicConfig(actor, config);
+    rerenderRunicTab(app);
+    return;
+  }
 
   if (action === "add-rune") {
     const select = root.querySelector(`[data-ptr-runic-rune-select][data-slot="${slotId}"]`);
@@ -398,7 +446,8 @@ async function assignRune(actor, slotId, runeItemId) {
   if (!runeItemId) return ui.notifications.warn(label("PTR_RUNIC.Notify.NoRune", "Choose a Rune to assign."));
 
   const config = normalizeRunicConfig(actor.getFlag(MODULE_ID, RUNIC_FLAG));
-  const slot = config[slotId];
+  const slotRef = getRunicSlotRef(config, slotId);
+  const slot = slotRef?.slot;
   if (!slot?.itemId || !actor.items.get(slot.itemId)) {
     return ui.notifications.warn(label("PTR_RUNIC.Notify.NoEquipment", "Choose equipment before assigning a Rune."));
   }
@@ -417,7 +466,8 @@ async function assignRune(actor, slotId, runeItemId) {
 
   const metadata = getRuneMetadata(rune);
   const usedSlots = slot.runes.reduce((total, assignment) => total + clampInt(assignment.slotRune, 1, 5), 0);
-  const freeSlots = getCapacity(slotId, slot) - usedSlots;
+  if (slotRef.baseSlotId === WEAPON_SLOT_ID && isShieldItem(actor.items.get(slot.itemId))) slot.weaponType = "oneHanded";
+  const freeSlots = getCapacity(slotRef.baseSlotId, slot, actor.items.get(slot.itemId)) - usedSlots;
   if (metadata.slotRune > freeSlots) {
     return ui.notifications.warn(label("PTR_RUNIC.Notify.NoSlots", "Not enough free RE Slots for this Rune."));
   }
@@ -436,7 +486,7 @@ async function assignRune(actor, slotId, runeItemId) {
 
 async function removeRuneAssignment(actor, slotId, assignmentId) {
   const config = normalizeRunicConfig(actor.getFlag(MODULE_ID, RUNIC_FLAG));
-  const slot = config[slotId];
+  const slot = getRunicSlotRef(config, slotId)?.slot;
   if (!slot) return;
 
   slot.runes = slot.runes.filter((assignment) => assignment.id !== assignmentId);
@@ -577,7 +627,14 @@ function normalizeRunicConfig(raw) {
   const source = foundry.utils.deepClone(raw ?? {});
   const result = {};
 
-  for (const definition of SLOT_DEFINITIONS) {
+  const weaponSources = Array.isArray(source.weapons)
+    ? source.weapons
+    : source.weapon
+      ? [{ id: "legacy-weapon", ...source.weapon }]
+      : [];
+  result.weapons = weaponSources.map(normalizeWeaponEntry).filter(Boolean);
+
+  for (const definition of EQUIPMENT_SLOT_DEFINITIONS) {
     const existing = source[definition.id] ?? {};
     result[definition.id] = {
       itemId: existing.itemId || null,
@@ -590,6 +647,29 @@ function normalizeRunicConfig(raw) {
   }
 
   return result;
+}
+
+function createWeaponEntry(overrides = {}) {
+  return {
+    id: overrides.id || randomID(),
+    itemId: overrides.itemId || null,
+    weaponType: overrides.weaponType === "twoHanded" ? "twoHanded" : "oneHanded",
+    orientation: overrides.orientation === "special" ? "special" : "physical",
+    runes: Array.isArray(overrides.runes) ? overrides.runes : []
+  };
+}
+
+function normalizeWeaponEntry(entry) {
+  if (!entry) return null;
+  return createWeaponEntry({
+    id: entry.id || randomID(),
+    itemId: entry.itemId || null,
+    weaponType: entry.weaponType,
+    orientation: entry.orientation,
+    runes: Array.isArray(entry.runes)
+      ? entry.runes.map(normalizeRuneAssignment).filter(Boolean)
+      : []
+  });
 }
 
 function normalizeRuneAssignment(assignment) {
@@ -608,8 +688,8 @@ async function saveRunicConfig(actor, config) {
   await actor.setFlag(MODULE_ID, RUNIC_FLAG, normalizeRunicConfig(config));
 }
 
-function trimRunesToCapacity(slotId, slot) {
-  const capacity = getCapacity(slotId, slot);
+function trimRunesToCapacity(slotId, slot, item = null) {
+  const capacity = getCapacity(slotId, slot, item);
   let used = 0;
   const kept = [];
   for (const assignment of slot.runes) {
@@ -621,10 +701,10 @@ function trimRunesToCapacity(slotId, slot) {
   slot.runes = kept;
 }
 
-function getCapacity(slotId, slotState) {
+function getCapacity(slotId, slotState, item = null) {
   const orientation = slotState.orientation === "special" ? "special" : "physical";
   if (slotId === "weapon") {
-    const weaponType = slotState.weaponType === "twoHanded" ? "twoHanded" : "oneHanded";
+    const weaponType = slotState.weaponType === "twoHanded" && !isShieldItem(item) ? "twoHanded" : "oneHanded";
     return RE_SLOT_VALUES[orientation].weapon[weaponType];
   }
   return RE_SLOT_VALUES[orientation][slotId] ?? 0;
@@ -632,7 +712,7 @@ function getCapacity(slotId, slotState) {
 
 function countAssignedRunes(config) {
   const counts = new Map();
-  for (const slot of Object.values(config)) {
+  for (const slot of getAllRunicSlots(config)) {
     for (const assignment of slot.runes ?? []) {
       counts.set(assignment.runeItemId, (counts.get(assignment.runeItemId) ?? 0) + 1);
     }
@@ -730,8 +810,19 @@ function getCompatibleSlots(item) {
     if (matcher.test(text)) slots.add(slot);
   }
 
-  if (/\b(equipment|equip|armor|armour|fashion|weapon)\b/i.test(text)) slots.add("equipment");
+  if (/\b(equipment|equip|armor|armour|fashion|weapon|shield)\b/i.test(text)) slots.add("equipment");
   return slots;
+}
+
+function isShieldItem(item) {
+  if (!item) return false;
+  const text = [
+    item.name,
+    item.system?.category,
+    item.system?.subtype,
+    ...normalizeKeywords(item.system?.keywords)
+  ].join(" ");
+  return /\b(shield|buckler|aegis)\b/i.test(text);
 }
 
 function createRuneItemData() {
@@ -788,7 +879,7 @@ async function cleanupDeletedItemReferences(item) {
   const config = normalizeRunicConfig(actor.getFlag(MODULE_ID, RUNIC_FLAG));
   let changed = false;
 
-  for (const slot of Object.values(config)) {
+  for (const slot of getAllRunicSlots(config)) {
     if (slot.itemId === item.id) {
       slot.itemId = null;
       slot.runes = [];
@@ -810,7 +901,7 @@ async function cleanupRuneAssignmentsForItem(actor, itemId) {
   const config = normalizeRunicConfig(actor.getFlag(MODULE_ID, RUNIC_FLAG));
   let changed = false;
 
-  for (const slot of Object.values(config)) {
+  for (const slot of getAllRunicSlots(config)) {
     const nextRunes = slot.runes.filter((assignment) => assignment.runeItemId !== itemId);
     if (nextRunes.length !== slot.runes.length) {
       slot.runes = nextRunes;
@@ -916,6 +1007,37 @@ function getLabels() {
     runeInventory: label("PTR_RUNIC.RuneInventory", "Rune Inventory"),
     noRunes: label("PTR_RUNIC.NoRunes", "No Rune item found on this Trainer.")
   };
+}
+
+function getAllRunicSlots(config) {
+  return [
+    ...(config.weapons ?? []),
+    ...EQUIPMENT_SLOT_DEFINITIONS.map((definition) => config[definition.id]).filter(Boolean)
+  ];
+}
+
+function getRunicSlotRef(config, slotId) {
+  const weaponEntryId = getWeaponEntryIdFromSlotKey(slotId);
+  if (weaponEntryId) {
+    const slot = config.weapons.find((entry) => entry.id === weaponEntryId);
+    return slot ? { slot, baseSlotId: WEAPON_SLOT_ID, entryId: weaponEntryId } : null;
+  }
+
+  const slot = config[slotId];
+  return slot ? { slot, baseSlotId: slotId, entryId: null } : null;
+}
+
+function getBaseSlotId(slotId) {
+  return getWeaponEntryIdFromSlotKey(slotId) ? WEAPON_SLOT_ID : slotId;
+}
+
+function getWeaponSlotKey(entryId) {
+  return `${WEAPON_SLOT_ID}:${entryId}`;
+}
+
+function getWeaponEntryIdFromSlotKey(slotId) {
+  const value = String(slotId ?? "");
+  return value.startsWith(`${WEAPON_SLOT_ID}:`) ? value.slice(WEAPON_SLOT_ID.length + 1) : null;
 }
 
 function label(key, fallback) {
